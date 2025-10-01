@@ -11,7 +11,7 @@ export class AuthController {
 
     /**
  * @api {post} /auth/login iniciar sesion Usuario
- * @apiName RegisterUser
+ * @apiName iniciar sesion
  * @apiGroup Auth
  * 
  * @apiDescription Este endpoint inicia sesion en el sistema.
