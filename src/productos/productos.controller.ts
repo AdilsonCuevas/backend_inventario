@@ -18,6 +18,12 @@ export class ProductosController {
         return await this.productsService.create(dto);
     }
 
+    @Get('views')
+    @Roles('ADMIN')
+    views() {
+        return this.productsService.views();
+    }
+
     @Get()
     @Roles('ADMIN')
     findAll() {
@@ -42,9 +48,4 @@ export class ProductosController {
         return this.productsService.remove(id);
     }
 
-    @Get('views')
-    @Roles('ADMIN')
-    views() {
-        return this.productsService.views();
-    }
 }

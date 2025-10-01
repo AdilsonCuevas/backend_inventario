@@ -5,6 +5,8 @@ import { CreateProductDto } from './dto/dto.product';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Compra } from 'src/compras/models/Tcompras.model';
 import { User } from 'src/auth/models/user.models';
+import { ProductoCompra } from 'src/compras/models/TproductosCompras.model';
+import { groupBy } from 'lodash';
 
 @Injectable()
 export class ProductosService {
@@ -19,8 +21,8 @@ export class ProductosService {
         @InjectModel(User)
         private userModel: typeof User,
 
-        @InjectModel(User)
-        private ProductoCompra: typeof User,
+        @InjectModel(ProductoCompra)
+        private productoCompra: typeof ProductoCompra,
     ) { }
 
     async create(dto: CreateProductDto): Promise<Product> {
@@ -48,7 +50,6 @@ export class ProductosService {
     }
 
     async views() {
-        console.log("enrea aqui");
         const compras = await this.compraModel.findAll({
             attributes: ['id', 'totalCompra', 'createdAt'],
             include: [{
@@ -56,7 +57,7 @@ export class ProductosService {
                 attributes: ['fullName', 'email'],
             },
             {
-                model: this.ProductoCompra,
+                model: this.productoCompra,
                 attributes: ['cantidad'],
                 include: [
                     {
@@ -65,21 +66,29 @@ export class ProductosService {
                     },
                 ],
             },
-            ]
+            ],
+            raw: true,
+            nest: true,
         });
 
-        return compras.map(compra => ({
-            fechaCompra: compra.createdAt,
-            totalCompra: compra.totalCompra,
-            cliente: {
-                nombre: compra.cliente.fullName,
-                email: compra.cliente.email,
-            },
-            productos: compra.productos.map(pc => ({
-                nombre: pc.product.name,
-                cantidad: pc.cantidad,
-                precioUnitario: pc.product.price,
-            })),
-        }));
+        const response: any[] = [];
+
+        const comprasRaw = Object.values(groupBy(compras, 'id')).map((items: any[]) => {
+            const { id, totalCompra, createdAt, cliente } = items[0];
+            const productos = items.map(i => ({
+                cantidad: i.productos.cantidad,
+                name: i.productos.product.name,
+                price: i.productos.product.price,
+            }));
+            response.push({
+                id,
+                totalCompra,
+                createdAt,
+                cliente,
+                productos,
+            });
+        });
+
+        return response;
     }
 }
